@@ -16,7 +16,7 @@ require("lazy").setup({
     "marko-cerovac/material.nvim",
     priority = 1000,
     init = function()
-      vim.g.material_style = "deep ocean"
+      vim.g.material_style = "oceanic"
     end,
     opts = {
       disable = {
