@@ -17,7 +17,6 @@ require("lazy").setup({
     name = "rose-pine",
     priority = 1000,
     opts = {
-      variant = "moon",
       styles = {
         transparency = true,
       },
