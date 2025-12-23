@@ -12,22 +12,21 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  -- Theme + UI
   { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
   "nvim-lualine/lualine.nvim",
   "nvim-tree/nvim-tree.lua",
 
-  -- Core LSP + IntelliSense
+  -- LSP + Completion
   "neovim/nvim-lspconfig",
   "hrsh7th/nvim-cmp",
   "hrsh7th/cmp-nvim-lsp",
   "L3MON4D3/LuaSnip",
   "saadparwaiz1/cmp_luasnip",
 
-  -- Syntax highlighting
+  -- Syntax
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
 
-  -- Fuzzy finder
+  -- Telescope
   { "nvim-telescope/telescope.nvim", tag = "0.1.6", dependencies = { "nvim-lua/plenary.nvim" } },
 
   -- Terminal
@@ -39,7 +38,7 @@ require("lazy").setup({
 })
 
 -- ===========================
--- ⚙️ Basic Editor Settings
+-- ⚙️ Editor Settings
 -- ===========================
 vim.o.number = true
 vim.o.relativenumber = true
@@ -48,10 +47,11 @@ vim.o.cursorline = true
 vim.o.tabstop = 2
 vim.o.shiftwidth = 2
 vim.o.expandtab = true
+vim.opt.splitright = true
 vim.g.mapleader = " "
-vim.cmd.colorscheme "catppuccin"
 
--- Strong black background
+vim.cmd.colorscheme("catppuccin")
+
 vim.cmd("highlight Normal guibg=#000000")
 vim.cmd("highlight NormalNC guibg=#000000")
 vim.cmd("highlight SignColumn guibg=#000000")
@@ -72,15 +72,18 @@ require("nvim-treesitter.configs").setup({
 -- ===========================
 -- 🔗 Utilities
 -- ===========================
-require("nvim-autopairs").setup {}
+require("nvim-autopairs").setup({})
 require("lualine").setup({ options = { theme = "catppuccin" } })
 
 -- ===========================
--- 📁 File Explorer
+-- 📁 NvimTree
 -- ===========================
 require("nvim-tree").setup({
   view = { width = 35 },
-  renderer = { highlight_git = true, icons = { show = { file = true, folder = true } } },
+  renderer = {
+    highlight_git = true,
+    icons = { show = { file = true, folder = true } },
+  },
   actions = { open_file = { quit_on_open = false } },
 })
 vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>")
@@ -88,13 +91,19 @@ vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>")
 -- ===========================
 -- 🔍 Telescope
 -- ===========================
+local actions = require("telescope.actions")
 require("telescope").setup({
   defaults = {
     layout_strategy = "vertical",
     sorting_strategy = "ascending",
     layout_config = { prompt_position = "top" },
+    mappings = {
+      i = { ["<A-Enter>"] = actions.select_vertical },
+      n = { ["<A-Enter>"] = actions.select_vertical },
+    },
   },
 })
+
 local builtin = require("telescope.builtin")
 vim.keymap.set("n", "<C-p>", builtin.find_files)
 vim.keymap.set("n", "<leader>fg", builtin.live_grep)
@@ -102,16 +111,17 @@ vim.keymap.set("n", "<leader>fb", builtin.buffers)
 vim.keymap.set("n", "<leader>fh", builtin.help_tags)
 
 -- ===========================
--- 🤖 Modern LSP (0.11+)
+-- 🤖 LSP (Modern style)
 -- ===========================
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-local function start_lsp(name, cmd, root_files)
+local function start_lsp(name, cmd, root_files, settings)
   vim.lsp.start({
     name = name,
     cmd = cmd,
     root_dir = vim.fs.root(0, root_files),
     capabilities = capabilities,
+    settings = settings,
   })
 end
 
@@ -123,12 +133,15 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- JS / TS / React / Next.js
+-- JS / TS
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "javascript", "typescript", "typescriptreact", "javascriptreact" },
   callback = function()
-    start_lsp("tsserver", { "typescript-language-server", "--stdio" },
-      { "package.json", "tsconfig.json", ".git" })
+    start_lsp(
+      "tsserver",
+      { "typescript-language-server", "--stdio" },
+      { "package.json", "tsconfig.json", ".git" }
+    )
   end,
 })
 
@@ -141,7 +154,52 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- ===========================
--- 💡 Completion (nvim-cmp)
+-- 🌬️ Tailwind CSS LSP
+-- ===========================
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = {
+    "html", "css", "scss",
+    "javascript", "typescript",
+    "javascriptreact", "typescriptreact",
+  },
+  callback = function()
+    start_lsp(
+      "tailwindcss",
+      { "tailwindcss-language-server", "--stdio" },
+      {
+        "tailwind.config.js",
+        "tailwind.config.cjs",
+        "tailwind.config.ts",
+        "postcss.config.js",
+        "package.json",
+        ".git",
+      },
+      {
+        tailwindCSS = {
+          validate = true,
+          lint = {
+            cssConflict = "warning",
+            invalidApply = "error",
+            invalidConfigPath = "error",
+            invalidScreen = "error",
+            invalidVariant = "error",
+          },
+          experimental = {
+            classRegex = {
+              "class=\"([^\"]*)\"",
+              "className=\"([^\"]*)\"",
+              "tw`([^`]*)`",
+              "cn%(([^)]*)%)",
+            },
+          },
+        },
+      }
+    )
+  end,
+})
+
+-- ===========================
+-- 💡 Completion
 -- ===========================
 local cmp = require("cmp")
 
@@ -151,33 +209,22 @@ cmp.setup({
       require("luasnip").lsp_expand(args.body)
     end,
   },
-
   mapping = {
     ["<Tab>"] = cmp.mapping.select_next_item(),
     ["<S-Tab>"] = cmp.mapping.select_prev_item(),
-
-    -- FIXED ENTER (VS CODE style)
-    ["<CR>"] = function(fallback)
-      if cmp.visible() then
-        cmp.confirm({
-          behavior = cmp.ConfirmBehavior.Replace,
-          select = true,
-        })
-      else
-        fallback()
-      end
-    end,
+    ["<CR>"] = cmp.mapping.confirm({
+      behavior = cmp.ConfirmBehavior.Replace, -- ✅ FIX
+      select = true,
+    }),
   },
-
   sources = {
     { name = "nvim_lsp" },
     { name = "luasnip" },
   },
 })
 
--- autopairs integration
 local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+cmp.event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm_done())
 
 -- ===========================
 -- 🧹 Format on Save
@@ -190,7 +237,7 @@ vim.api.nvim_create_autocmd("BufWritePre", {
 })
 
 -- ===========================
--- 🚦 Diagnostics + LSP Navigation
+-- 🚦 Diagnostics + Nav
 -- ===========================
 vim.diagnostic.config({
   virtual_text = true,
@@ -206,21 +253,17 @@ vim.keymap.set("n", "]d", vim.diagnostic.goto_next)
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename)
 
 -- ===========================
--- 🎹 VS Code–Style Keybindings
+-- 🎹 VS Code–Style Keybindings (PRESERVED)
 -- ===========================
-
--- Ctrl + A → Select all
 vim.keymap.set("n", "<C-a>", "ggVG")
 vim.keymap.set("i", "<C-a>", "<Esc>ggVG")
 
--- Clipboard copy/paste
 vim.keymap.set({ "n", "v" }, "<C-c>", '"+y')
 vim.keymap.set({ "n", "v" }, "<C-S-c>", '"+y')
 vim.keymap.set("n", "<C-v>", '"+p')
 vim.keymap.set("v", "<C-v>", '"+p')
-vim.keymap.set("i", "<C-v>", '<C-r>+')
+vim.keymap.set("i", "<C-v>", "<C-r>+")
 
--- Ctrl + Shift + Arrow word selection
 vim.keymap.set("n", "<C-S-Right>", "ve")
 vim.keymap.set("n", "<C-S-Left>", "vb")
 vim.keymap.set("v", "<C-S-Right>", "e")
@@ -236,14 +279,5 @@ require("toggleterm").setup({
   start_in_insert = true,
   float_opts = { border = "curved" },
 })
-
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]])
-
-vim.keymap.set("n", "<leader>th", function()
-  require("toggleterm.terminal").Terminal:new({ direction = "horizontal" }):toggle()
-end)
-
-vim.keymap.set("n", "<leader>tv", function()
-  require("toggleterm.terminal").Terminal:new({ direction = "vertical" }):toggle()
-end)
 
