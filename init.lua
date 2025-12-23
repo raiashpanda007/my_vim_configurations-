@@ -13,13 +13,17 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
-    "rose-pine/neovim",
-    name = "rose-pine",
+    "rebelot/kanagawa.nvim",
     priority = 1000,
     opts = {
-      styles = {
-        transparency = true,
-      },
+      transparent = true,
+      theme = "wave",
+      dimInactive = true, -- Dim inactive windows
+      keywordStyle = { italic = true },
+      commentStyle = { italic = true },
+      statementStyle = { bold = true },
+      typeStyle = { bold = true },
+      background = { dark = "wave", light = "lotus" },
     },
   },
   "nvim-lualine/lualine.nvim",
@@ -44,6 +48,12 @@ require("lazy").setup({
   -- QoL
   "windwp/nvim-autopairs",
   "tpope/vim-commentary",
+
+  -- UI Enhancements
+  { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {} },
+  "karb94/neoscroll.nvim",
+  "nvim-treesitter/nvim-treesitter-context",
+  "goolord/alpha-nvim",
 })
 
 -- ===========================
@@ -59,7 +69,7 @@ vim.o.expandtab = true
 vim.opt.splitright = true
 vim.g.mapleader = " "
 
-vim.cmd.colorscheme("rose-pine")
+vim.cmd.colorscheme("kanagawa")
 
 -- ===========================
 -- 🌈 Treesitter
@@ -76,7 +86,37 @@ require("nvim-treesitter.configs").setup({
 -- 🔗 Utilities
 -- ===========================
 require("nvim-autopairs").setup({})
-require("lualine").setup({ options = { theme = "rose-pine" } })
+require("lualine").setup({
+  options = {
+    theme = "kanagawa",
+    component_separators = "",
+    section_separators = "",
+    globalstatus = true,
+  },
+  sections = {
+    lualine_a = {},
+    lualine_b = {},
+    lualine_c = { { "filename", path = 1 } }, -- Relative path
+    lualine_x = { "location" },
+    lualine_y = {},
+    lualine_z = {},
+  },
+})
+
+-- UI Configs
+vim.opt.winbar = "%=%m %f" -- Winbar with file path
+vim.opt.pumblend = 10 -- Popup transparency
+vim.opt.winblend = 10 -- Floating window transparency
+
+require("neoscroll").setup({ hide_cursor = true })
+require("treesitter-context").setup({ mode = "cursor", max_lines = 3 })
+
+require("ibl").setup({
+  indent = { char = "│" },
+  scope = { enabled = true, show_start = false, show_end = false },
+})
+
+require("alpha").setup(require("alpha.themes.startify").config)
 
 -- ===========================
 -- 📁 NvimTree
