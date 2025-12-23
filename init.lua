@@ -12,7 +12,19 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
+  {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+    opts = {
+      style = "storm",
+      transparent = true,
+      styles = {
+        sidebars = "transparent",
+        floats = "transparent",
+      },
+    },
+  },
   "nvim-lualine/lualine.nvim",
   "nvim-tree/nvim-tree.lua",
 
@@ -50,13 +62,7 @@ vim.o.expandtab = true
 vim.opt.splitright = true
 vim.g.mapleader = " "
 
-vim.cmd.colorscheme("catppuccin")
-
-vim.cmd("highlight Normal guibg=#000000")
-vim.cmd("highlight NormalNC guibg=#000000")
-vim.cmd("highlight SignColumn guibg=#000000")
-vim.cmd("highlight LineNr guibg=#000000")
-vim.cmd("highlight EndOfBuffer guibg=#000000")
+vim.cmd.colorscheme("tokyonight")
 
 -- ===========================
 -- 🌈 Treesitter
@@ -73,7 +79,7 @@ require("nvim-treesitter.configs").setup({
 -- 🔗 Utilities
 -- ===========================
 require("nvim-autopairs").setup({})
-require("lualine").setup({ options = { theme = "catppuccin" } })
+require("lualine").setup({ options = { theme = "tokyonight" } })
 
 -- ===========================
 -- 📁 NvimTree
@@ -280,4 +286,13 @@ require("toggleterm").setup({
   float_opts = { border = "curved" },
 })
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]])
+
+-- ===========================
+-- ⌨️ User Custom Keymaps
+-- ===========================
+-- Cycle through windows (screens) circularly (Left -> Right)
+vim.keymap.set({ "n", "i", "v" }, "<A-w>", "<cmd>wincmd w<CR>")
+
+-- Toggle Side Directory (NvimTree)
+vim.keymap.set({ "n", "i", "v" }, "<C-b>", "<cmd>NvimTreeToggle<CR>")
 
