@@ -13,14 +13,13 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
-    "marko-cerovac/material.nvim",
+    "rose-pine/neovim",
+    name = "rose-pine",
     priority = 1000,
-    init = function()
-      vim.g.material_style = "oceanic"
-    end,
     opts = {
-      disable = {
-        background = true, -- Keep transparency
+      variant = "moon",
+      styles = {
+        transparency = true,
       },
     },
   },
@@ -61,7 +60,7 @@ vim.o.expandtab = true
 vim.opt.splitright = true
 vim.g.mapleader = " "
 
-vim.cmd.colorscheme("material")
+vim.cmd.colorscheme("rose-pine")
 
 -- ===========================
 -- 🌈 Treesitter
@@ -78,7 +77,7 @@ require("nvim-treesitter.configs").setup({
 -- 🔗 Utilities
 -- ===========================
 require("nvim-autopairs").setup({})
-require("lualine").setup({ options = { theme = "material" } })
+require("lualine").setup({ options = { theme = "rose-pine" } })
 
 -- ===========================
 -- 📁 NvimTree
