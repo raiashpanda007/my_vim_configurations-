@@ -13,15 +13,14 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
   {
-    "folke/tokyonight.nvim",
-    lazy = false,
+    "marko-cerovac/material.nvim",
     priority = 1000,
+    init = function()
+      vim.g.material_style = "deep ocean"
+    end,
     opts = {
-      style = "storm",
-      transparent = true,
-      styles = {
-        sidebars = "transparent",
-        floats = "transparent",
+      disable = {
+        background = true, -- Keep transparency
       },
     },
   },
@@ -62,7 +61,7 @@ vim.o.expandtab = true
 vim.opt.splitright = true
 vim.g.mapleader = " "
 
-vim.cmd.colorscheme("tokyonight")
+vim.cmd.colorscheme("material")
 
 -- ===========================
 -- 🌈 Treesitter
@@ -79,7 +78,7 @@ require("nvim-treesitter.configs").setup({
 -- 🔗 Utilities
 -- ===========================
 require("nvim-autopairs").setup({})
-require("lualine").setup({ options = { theme = "tokyonight" } })
+require("lualine").setup({ options = { theme = "material" } })
 
 -- ===========================
 -- 📁 NvimTree
