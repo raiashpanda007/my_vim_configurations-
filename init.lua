@@ -11,20 +11,36 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+function ColorMyPencils(color)
+  color = color or "rose-pine"
+  vim.cmd.colorscheme(color)
+end
+
 require("lazy").setup({
   {
-    "rebelot/kanagawa.nvim",
-    priority = 1000,
-    opts = {
-      transparent = true,
-      theme = "wave",
-      dimInactive = true, -- Dim inactive windows
-      keywordStyle = { italic = true },
-      commentStyle = { italic = true },
-      statementStyle = { bold = true },
-      typeStyle = { bold = true },
-      background = { dark = "wave", light = "lotus" },
-    },
+    "folke/tokyonight.nvim",
+    config = function()
+      require("tokyonight").setup({
+        style = "storm",
+        transparent = true,
+        terminal_colors = true,
+        styles = {
+          comments = { italic = false },
+          keywords = { italic = false },
+          sidebars = "dark",
+          floats = "dark",
+        },
+      })
+    end,
+  },
+  {
+    "rose-pine/neovim",
+    name = "rose-pine",
+    config = function()
+      require("rose-pine").setup({ disable_background = true })
+      vim.cmd("colorscheme rose-pine")
+      ColorMyPencils()
+    end,
   },
   "nvim-lualine/lualine.nvim",
   "nvim-tree/nvim-tree.lua",
@@ -69,7 +85,7 @@ vim.o.expandtab = true
 vim.opt.splitright = true
 vim.g.mapleader = " "
 
-vim.cmd.colorscheme("kanagawa")
+
 
 -- ===========================
 -- 🌈 Treesitter
@@ -88,7 +104,7 @@ require("nvim-treesitter.configs").setup({
 require("nvim-autopairs").setup({})
 require("lualine").setup({
   options = {
-    theme = "kanagawa",
+    theme = "rose-pine",
     component_separators = "",
     section_separators = "",
     globalstatus = true,
