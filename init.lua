@@ -14,6 +14,22 @@ vim.opt.rtp:prepend(lazypath)
 function ColorMyPencils(color)
   color = color or "rose-pine"
   vim.cmd.colorscheme(color)
+
+  -- Force Transparency
+  local hl_groups = { "Normal", "NormalFloat", "NormalNC", "Pmenu", "SignColumn", "TelescopeNormal", "TelescopeBorder" }
+  for _, group in ipairs(hl_groups) do
+    vim.api.nvim_set_hl(0, group, { bg = "none" })
+  end
+
+  -- Muted & Italic Comments
+  vim.api.nvim_set_hl(0, "Comment", { fg = "#6e6a86", italic = true })
+
+  -- Muted & Italic Unused Variables (DiagnosticUnnecessary)
+  vim.api.nvim_set_hl(0, "DiagnosticUnnecessary", { fg = "#6e6a86", italic = true })
+
+  -- Subtle Line Numbers
+  vim.api.nvim_set_hl(0, "LineNr", { fg = "#6e6a86" })
+  vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#e0def4", bold = true })
 end
 
 require("lazy").setup({
@@ -42,10 +58,14 @@ require("lazy").setup({
       ColorMyPencils()
     end,
   },
+  "nvim-tree/nvim-web-devicons",
   "nvim-lualine/lualine.nvim",
   "nvim-tree/nvim-tree.lua",
 
   -- LSP + Completion
+
+  "williamboman/mason.nvim",
+  "williamboman/mason-lspconfig.nvim",
   "neovim/nvim-lspconfig",
   "hrsh7th/nvim-cmp",
   "hrsh7th/cmp-nvim-lsp",
@@ -56,10 +76,10 @@ require("lazy").setup({
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
 
   -- Telescope
-  { "nvim-telescope/telescope.nvim", tag = "0.1.6", dependencies = { "nvim-lua/plenary.nvim" } },
+  { "nvim-telescope/telescope.nvim",   tag = "0.1.6",      dependencies = { "nvim-lua/plenary.nvim" } },
 
   -- Terminal
-  { "akinsho/toggleterm.nvim", version = "*", config = true },
+  { "akinsho/toggleterm.nvim",         version = "*",      config = true },
 
   -- QoL
   "windwp/nvim-autopairs",
@@ -120,7 +140,6 @@ require("lualine").setup({
 })
 
 -- UI Configs
-vim.opt.winbar = "%=%m %f" -- Winbar with file path
 vim.opt.pumblend = 10 -- Popup transparency
 vim.opt.winblend = 10 -- Floating window transparency
 
@@ -169,93 +188,37 @@ vim.keymap.set("n", "<leader>fg", builtin.live_grep)
 vim.keymap.set("n", "<leader>fb", builtin.buffers)
 vim.keymap.set("n", "<leader>fh", builtin.help_tags)
 
--- ===========================
--- 🤖 LSP (Modern style)
--- ===========================
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
+-- LSP capabilities for nvim-cmp
+local capabilities = require("cmp_nvim_lsp").default_capabilities(
+  vim.lsp.protocol.make_client_capabilities()
+)
 
-local function start_lsp(name, cmd, root_files, settings)
-  vim.lsp.start({
-    name = name,
-    cmd = cmd,
-    root_dir = vim.fs.root(0, root_files),
-    capabilities = capabilities,
-    settings = settings,
-  })
+-- ===========================
+-- 🤖 LSP (Mason + lspconfig)
+-- ===========================
+-- Enable default servers
+local servers = { "gopls", "ts_ls", "yamlls", "tailwindcss", "jsonls", "clangd", "html", "cssls" }
+
+require("mason").setup()
+require("mason-lspconfig").setup({
+  ensure_installed = vim.list_extend({ "lua_ls" }, servers),
+})
+
+for _, server in ipairs(servers) do
+  vim.lsp.config(server, { capabilities = capabilities })
+  vim.lsp.enable(server)
 end
 
--- Go
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "go",
-  callback = function()
-    start_lsp("gopls", { "gopls" }, { "go.mod", ".git" })
-  end,
-})
-
--- JS / TS
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "javascript", "typescript", "typescriptreact", "javascriptreact" },
-  callback = function()
-    start_lsp(
-      "tsserver",
-      { "typescript-language-server", "--stdio" },
-      { "package.json", "tsconfig.json", ".git" }
-    )
-  end,
-})
-
--- YAML
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "yaml", "yml" },
-  callback = function()
-    start_lsp("yamlls", { "yaml-language-server", "--stdio" }, { ".git" })
-  end,
-})
-
--- ===========================
--- 🌬️ Tailwind CSS LSP
--- ===========================
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = {
-    "html", "css", "scss",
-    "javascript", "typescript",
-    "javascriptreact", "typescriptreact",
+-- Lua LS with specific settings
+vim.lsp.config("lua_ls", {
+  capabilities = capabilities,
+  settings = {
+    Lua = {
+      diagnostics = { globals = { "vim" } },
+    },
   },
-  callback = function()
-    start_lsp(
-      "tailwindcss",
-      { "tailwindcss-language-server", "--stdio" },
-      {
-        "tailwind.config.js",
-        "tailwind.config.cjs",
-        "tailwind.config.ts",
-        "postcss.config.js",
-        "package.json",
-        ".git",
-      },
-      {
-        tailwindCSS = {
-          validate = true,
-          lint = {
-            cssConflict = "warning",
-            invalidApply = "error",
-            invalidConfigPath = "error",
-            invalidScreen = "error",
-            invalidVariant = "error",
-          },
-          experimental = {
-            classRegex = {
-              "class=\"([^\"]*)\"",
-              "className=\"([^\"]*)\"",
-              "tw`([^`]*)`",
-              "cn%(([^)]*)%)",
-            },
-          },
-        },
-      }
-    )
-  end,
 })
+vim.lsp.enable("lua_ls")
 
 -- ===========================
 -- 💡 Completion
@@ -269,6 +232,7 @@ cmp.setup({
     end,
   },
   mapping = {
+    ["<C-Space>"] = cmp.mapping.complete(),
     ["<Tab>"] = cmp.mapping.select_next_item(),
     ["<S-Tab>"] = cmp.mapping.select_prev_item(),
     ["<CR>"] = cmp.mapping.confirm({
@@ -278,6 +242,7 @@ cmp.setup({
   },
   sources = {
     { name = "nvim_lsp" },
+    { name = "buffer" },
     { name = "luasnip" },
   },
 })
@@ -289,7 +254,7 @@ cmp.event:on("confirm_done", require("nvim-autopairs.completion.cmp").on_confirm
 -- 🧹 Format on Save
 -- ===========================
 vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = { "*.go", "*.js", "*.ts", "*.tsx", "*.jsx", "*.yaml", "*.yml" },
+  pattern = "*",
   callback = function()
     vim.lsp.buf.format({ async = false })
   end,
@@ -348,4 +313,3 @@ vim.keymap.set({ "n", "i", "v" }, "<A-w>", "<cmd>wincmd w<CR>")
 
 -- Toggle Side Directory (NvimTree)
 vim.keymap.set({ "n", "i", "v" }, "<C-b>", "<cmd>NvimTreeToggle<CR>")
-
