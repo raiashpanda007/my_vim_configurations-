@@ -87,9 +87,7 @@ require("lazy").setup({
 
   -- UI Enhancements
   { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {} },
-  "karb94/neoscroll.nvim",
   "nvim-treesitter/nvim-treesitter-context",
-  "goolord/alpha-nvim",
 })
 
 -- ===========================
@@ -143,7 +141,6 @@ require("lualine").setup({
 vim.opt.pumblend = 10 -- Popup transparency
 vim.opt.winblend = 10 -- Floating window transparency
 
-require("neoscroll").setup({ hide_cursor = true })
 require("treesitter-context").setup({ mode = "cursor", max_lines = 3 })
 
 require("ibl").setup({
@@ -151,7 +148,6 @@ require("ibl").setup({
   scope = { enabled = true, show_start = false, show_end = false },
 })
 
-require("alpha").setup(require("alpha.themes.startify").config)
 
 -- ===========================
 -- 📁 NvimTree
@@ -172,9 +168,18 @@ vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>")
 local actions = require("telescope.actions")
 require("telescope").setup({
   defaults = {
-    layout_strategy = "vertical",
+    layout_strategy = "horizontal",
     sorting_strategy = "ascending",
-    layout_config = { prompt_position = "top" },
+    layout_config = {
+      prompt_position = "top",
+      horizontal = {
+        preview_width = 0.55,
+        results_width = 0.8,
+      },
+      width = 0.87,
+      height = 0.40,
+      preview_cutoff = 120,
+    },
     mappings = {
       i = { ["<A-Enter>"] = actions.select_vertical },
       n = { ["<A-Enter>"] = actions.select_vertical },
@@ -197,7 +202,7 @@ local capabilities = require("cmp_nvim_lsp").default_capabilities(
 -- 🤖 LSP (Mason + lspconfig)
 -- ===========================
 -- Enable default servers
-local servers = { "gopls", "ts_ls", "yamlls", "tailwindcss", "jsonls", "clangd", "html", "cssls" }
+local servers = { "gopls", "ts_ls", "yamlls", "tailwindcss", "jsonls", "clangd", "html", "cssls", "sqls" }
 
 require("mason").setup()
 require("mason-lspconfig").setup({
