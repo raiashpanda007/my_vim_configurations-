@@ -183,10 +183,10 @@ require("nvim-treesitter.configs").setup({
 require("nvim-autopairs").setup({})
 require("lualine").setup({
   options = {
-    theme = "rose-pine",
+    theme                = "rose-pine",
     component_separators = { left = "", right = "" },
     section_separators   = { left = "", right = "" },
-    globalstatus = true,
+    globalstatus         = true,
   },
   sections = {
     lualine_a = { "mode" },
